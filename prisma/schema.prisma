@@ -1,0 +1,799 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../lib/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum WorkspaceType {
+  PERSONAL
+  HOUSEHOLD
+  BUSINESS
+}
+
+enum WorkspaceRole {
+  OWNER
+  ADMIN
+  MEMBER
+  VIEWER
+}
+
+enum MemberStatus {
+  ACTIVE
+  INVITED
+  DISABLED
+}
+
+enum InviteStatus {
+  PENDING
+  ACCEPTED
+  EXPIRED
+  REVOKED
+}
+
+enum AccountType {
+  CASH
+  BANK
+  DIGITAL_WALLET
+  SAVINGS
+  INVESTMENT
+  OTHER
+}
+
+enum Visibility {
+  SHARED
+  PRIVATE
+}
+
+enum CategoryType {
+  INCOME
+  EXPENSE
+  BOTH
+}
+
+enum TransactionType {
+  INCOME
+  EXPENSE
+  TRANSFER
+  CARD_PAYMENT
+  ADJUSTMENT
+}
+
+enum TransactionStatus {
+  PENDING
+  CLEARED
+  VOID
+}
+
+enum CardNetwork {
+  VISA
+  MASTERCARD
+  AMEX
+  CABAL
+  NARANJA
+  OTHER
+}
+
+enum CreditCardPurchaseStatus {
+  ACTIVE
+  CANCELED
+  REFUNDED
+}
+
+enum InstallmentStatus {
+  PENDING
+  POSTED
+  PAID
+  CANCELED
+}
+
+enum CreditCardStatementStatus {
+  OPEN
+  CLOSED
+  PARTIALLY_PAID
+  PAID
+  OVERDUE
+}
+
+enum RecurringFrequency {
+  DAILY
+  WEEKLY
+  BIWEEKLY
+  MONTHLY
+  BIMONTHLY
+  QUARTERLY
+  YEARLY
+  CUSTOM
+}
+
+enum RecurringStatus {
+  ACTIVE
+  PAUSED
+  ENDED
+}
+
+enum ProjectType {
+  CLIENT_PROJECT
+  INTERNAL
+  BUSINESS_AREA
+  EVENT
+  OTHER
+}
+
+enum ProjectStatus {
+  ACTIVE
+  PAUSED
+  COMPLETED
+  CANCELED
+}
+
+enum ReceivableStatus {
+  DRAFT
+  PENDING
+  PARTIAL
+  COLLECTED
+  OVERDUE
+  CANCELED
+}
+
+enum PayableStatus {
+  DRAFT
+  PENDING
+  PARTIAL
+  PAID
+  OVERDUE
+  CANCELED
+}
+
+enum BudgetPeriod {
+  WEEKLY
+  MONTHLY
+  YEARLY
+  CUSTOM
+}
+
+enum ReminderStatus {
+  PENDING
+  DONE
+  SNOOZED
+  CANCELED
+}
+
+model User {
+  id            String    @id @default(uuid()) @db.Uuid
+  name          String?
+  email         String    @unique
+  emailVerified DateTime?
+  image         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  deletedAt     DateTime?
+
+  memberships              WorkspaceMember[]
+  createdWorkspaces        Workspace[]          @relation("WorkspaceCreatedBy")
+  sentWorkspaceInvites     WorkspaceInvite[]    @relation("WorkspaceInviteSentBy")
+  acceptedWorkspaceInvites WorkspaceInvite[]    @relation("WorkspaceInviteAcceptedBy")
+  createdAccounts          FinancialAccount[]   @relation("FinancialAccountCreatedBy")
+  createdCategories        Category[]           @relation("CategoryCreatedBy")
+  createdTransactions      Transaction[]        @relation("TransactionCreatedBy")
+  createdCreditCards       CreditCard[]         @relation("CreditCardCreatedBy")
+  createdCardPurchases     CreditCardPurchase[] @relation("CreditCardPurchaseCreatedBy")
+  createdCardPayments      CreditCardPayment[]  @relation("CreditCardPaymentCreatedBy")
+  createdRecurringRules    RecurringRule[]      @relation("RecurringRuleCreatedBy")
+  createdSubscriptions     Subscription[]       @relation("SubscriptionCreatedBy")
+  createdProjects          Project[]            @relation("ProjectCreatedBy")
+  createdReceivables       Receivable[]         @relation("ReceivableCreatedBy")
+  createdPayables          Payable[]            @relation("PayableCreatedBy")
+  createdBudgets           Budget[]             @relation("BudgetCreatedBy")
+  createdReminders         Reminder[]           @relation("ReminderCreatedBy")
+
+  @@index([deletedAt])
+}
+
+model Workspace {
+  id           String        @id @default(uuid()) @db.Uuid
+  name         String
+  type         WorkspaceType @default(PERSONAL)
+  baseCurrency String        @default("ARS") @db.VarChar(3)
+  createdById  String?       @db.Uuid
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  deletedAt    DateTime?
+
+  createdBy              User?                   @relation("WorkspaceCreatedBy", fields: [createdById], references: [id])
+  members                WorkspaceMember[]
+  invites                WorkspaceInvite[]
+  accounts               FinancialAccount[]
+  categories             Category[]
+  transactions           Transaction[]
+  creditCards            CreditCard[]
+  creditCardPurchases    CreditCardPurchase[]
+  creditCardInstallments CreditCardInstallment[]
+  creditCardStatements   CreditCardStatement[]
+  creditCardPayments     CreditCardPayment[]
+  recurringRules         RecurringRule[]
+  subscriptions          Subscription[]
+  projects               Project[]
+  receivables            Receivable[]
+  payables               Payable[]
+  budgets                Budget[]
+  reminders              Reminder[]
+
+  @@index([createdById])
+  @@index([type])
+  @@index([deletedAt])
+}
+
+model WorkspaceMember {
+  id          String       @id @default(uuid()) @db.Uuid
+  workspaceId String       @db.Uuid
+  userId      String       @db.Uuid
+  role        WorkspaceRole @default(MEMBER)
+  status      MemberStatus  @default(ACTIVE)
+  displayName String?
+  joinedAt    DateTime?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  deletedAt   DateTime?
+
+  workspace       Workspace          @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  user            User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  ownedAccounts   FinancialAccount[] @relation("FinancialAccountOwnerMember")
+  ownedCreditCards CreditCard[]      @relation("CreditCardOwnerMember")
+
+  @@unique([workspaceId, userId])
+  @@index([userId])
+  @@index([workspaceId, role])
+  @@index([status])
+}
+
+model WorkspaceInvite {
+  id           String        @id @default(uuid()) @db.Uuid
+  workspaceId  String        @db.Uuid
+  email        String
+  role         WorkspaceRole @default(MEMBER)
+  status       InviteStatus  @default(PENDING)
+  tokenHash    String?
+  expiresAt    DateTime
+  acceptedAt   DateTime?
+  invitedById  String?       @db.Uuid
+  acceptedById String?       @db.Uuid
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  workspace  Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  invitedBy  User?     @relation("WorkspaceInviteSentBy", fields: [invitedById], references: [id])
+  acceptedBy User?     @relation("WorkspaceInviteAcceptedBy", fields: [acceptedById], references: [id])
+
+  @@index([workspaceId, status])
+  @@index([email])
+  @@index([tokenHash])
+}
+
+model FinancialAccount {
+  id              String      @id @default(uuid()) @db.Uuid
+  workspaceId     String      @db.Uuid
+  ownerMemberId   String?     @db.Uuid
+  createdById     String?     @db.Uuid
+  name            String
+  type            AccountType @default(BANK)
+  currency        String      @default("ARS") @db.VarChar(3)
+  openingBalance  Decimal     @default(0) @db.Decimal(14, 2)
+  visibility      Visibility  @default(SHARED)
+  includeInNetWorth Boolean   @default(true)
+  archivedAt      DateTime?
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+  deletedAt       DateTime?
+
+  workspace               Workspace         @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  ownerMember             WorkspaceMember?  @relation("FinancialAccountOwnerMember", fields: [ownerMemberId], references: [id])
+  createdBy               User?             @relation("FinancialAccountCreatedBy", fields: [createdById], references: [id])
+  outgoingTransactions    Transaction[]     @relation("TransactionFromAccount")
+  incomingTransactions    Transaction[]     @relation("TransactionToAccount")
+  creditCardsForPayment   CreditCard[]      @relation("CreditCardPaymentAccount")
+  cardPayments            CreditCardPayment[]
+  recurringSourceRules    RecurringRule[]   @relation("RecurringSourceAccount")
+  recurringDestinationRules RecurringRule[] @relation("RecurringDestinationAccount")
+  subscriptions           Subscription[]    @relation("SubscriptionSourceAccount")
+  payables                Payable[]         @relation("PayableAccount")
+
+  @@index([workspaceId, type])
+  @@index([ownerMemberId])
+  @@index([createdById])
+  @@index([deletedAt])
+}
+
+model Category {
+  id          String       @id @default(uuid()) @db.Uuid
+  workspaceId String       @db.Uuid
+  parentId    String?      @db.Uuid
+  createdById String?      @db.Uuid
+  name        String
+  type        CategoryType @default(EXPENSE)
+  color       String?
+  icon        String?
+  isSystem    Boolean      @default(false)
+  sortOrder   Int          @default(0)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  deletedAt   DateTime?
+
+  workspace    Workspace            @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  parent       Category?            @relation("CategoryTree", fields: [parentId], references: [id])
+  children     Category[]           @relation("CategoryTree")
+  createdBy    User?                @relation("CategoryCreatedBy", fields: [createdById], references: [id])
+  transactions Transaction[]
+  cardPurchases CreditCardPurchase[]
+  recurringRules RecurringRule[]
+  subscriptions Subscription[]
+  budgets      Budget[]
+
+  @@unique([workspaceId, type, name])
+  @@index([workspaceId, parentId])
+  @@index([createdById])
+  @@index([deletedAt])
+}
+
+model Transaction {
+  id              String            @id @default(uuid()) @db.Uuid
+  workspaceId     String            @db.Uuid
+  fromAccountId   String?           @db.Uuid
+  toAccountId     String?           @db.Uuid
+  categoryId      String?           @db.Uuid
+  projectId       String?           @db.Uuid
+  recurringRuleId String?           @db.Uuid
+  createdById     String?           @db.Uuid
+  type            TransactionType
+  status          TransactionStatus @default(CLEARED)
+  amount          Decimal           @db.Decimal(14, 2)
+  currency        String            @default("ARS") @db.VarChar(3)
+  exchangeRate    Decimal?          @db.Decimal(18, 8)
+  occurredAt      DateTime
+  description     String
+  notes           String?
+  externalRef     String?
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  deletedAt       DateTime?
+
+  workspace         Workspace          @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  fromAccount       FinancialAccount?  @relation("TransactionFromAccount", fields: [fromAccountId], references: [id])
+  toAccount         FinancialAccount?  @relation("TransactionToAccount", fields: [toAccountId], references: [id])
+  category          Category?          @relation(fields: [categoryId], references: [id])
+  project           Project?           @relation(fields: [projectId], references: [id])
+  recurringRule     RecurringRule?     @relation(fields: [recurringRuleId], references: [id])
+  createdBy         User?              @relation("TransactionCreatedBy", fields: [createdById], references: [id])
+  creditCardPayment CreditCardPayment?
+  receivable        Receivable?
+  payable           Payable?
+
+  @@index([workspaceId, occurredAt])
+  @@index([workspaceId, type])
+  @@index([fromAccountId])
+  @@index([toAccountId])
+  @@index([categoryId])
+  @@index([projectId])
+  @@index([recurringRuleId])
+  @@index([createdById])
+  @@index([deletedAt])
+}
+
+model CreditCard {
+  id               String      @id @default(uuid()) @db.Uuid
+  workspaceId      String      @db.Uuid
+  ownerMemberId    String?     @db.Uuid
+  paymentAccountId String?     @db.Uuid
+  createdById      String?     @db.Uuid
+  name             String
+  issuer           String?
+  network          CardNetwork @default(OTHER)
+  lastFour         String?
+  currency         String      @default("ARS") @db.VarChar(3)
+  creditLimit      Decimal?    @db.Decimal(14, 2)
+  closingDay       Int
+  dueDay           Int
+  visibility       Visibility  @default(SHARED)
+  archivedAt       DateTime?
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
+  deletedAt        DateTime?
+
+  workspace      Workspace         @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  ownerMember    WorkspaceMember?  @relation("CreditCardOwnerMember", fields: [ownerMemberId], references: [id])
+  paymentAccount FinancialAccount? @relation("CreditCardPaymentAccount", fields: [paymentAccountId], references: [id])
+  createdBy      User?             @relation("CreditCardCreatedBy", fields: [createdById], references: [id])
+  purchases      CreditCardPurchase[]
+  statements     CreditCardStatement[]
+  payments       CreditCardPayment[]
+  recurringRules RecurringRule[]
+  subscriptions  Subscription[]
+
+  @@index([workspaceId])
+  @@index([ownerMemberId])
+  @@index([paymentAccountId])
+  @@index([createdById])
+  @@index([deletedAt])
+}
+
+model CreditCardPurchase {
+  id                String                   @id @default(uuid()) @db.Uuid
+  workspaceId       String                   @db.Uuid
+  creditCardId      String                   @db.Uuid
+  categoryId        String?                  @db.Uuid
+  projectId         String?                  @db.Uuid
+  createdById       String?                  @db.Uuid
+  merchant          String?
+  description       String
+  totalAmount       Decimal                  @db.Decimal(14, 2)
+  currency          String                   @default("ARS") @db.VarChar(3)
+  purchasedAt       DateTime
+  installmentsCount Int                      @default(1)
+  status            CreditCardPurchaseStatus @default(ACTIVE)
+  notes             String?
+  createdAt         DateTime                 @default(now())
+  updatedAt         DateTime                 @updatedAt
+  deletedAt         DateTime?
+
+  workspace    Workspace               @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  creditCard   CreditCard              @relation(fields: [creditCardId], references: [id], onDelete: Cascade)
+  category     Category?               @relation(fields: [categoryId], references: [id])
+  project      Project?                @relation(fields: [projectId], references: [id])
+  createdBy    User?                   @relation("CreditCardPurchaseCreatedBy", fields: [createdById], references: [id])
+  installments CreditCardInstallment[]
+
+  @@index([workspaceId, purchasedAt])
+  @@index([creditCardId])
+  @@index([categoryId])
+  @@index([projectId])
+  @@index([createdById])
+  @@index([deletedAt])
+}
+
+model CreditCardInstallment {
+  id                String            @id @default(uuid()) @db.Uuid
+  workspaceId       String            @db.Uuid
+  purchaseId        String            @db.Uuid
+  statementId       String?           @db.Uuid
+  installmentNumber Int
+  amount            Decimal           @db.Decimal(14, 2)
+  currency          String            @default("ARS") @db.VarChar(3)
+  dueYear           Int
+  dueMonth          Int
+  dueDate           DateTime?
+  status            InstallmentStatus @default(PENDING)
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+  deletedAt         DateTime?
+
+  workspace Workspace            @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  purchase  CreditCardPurchase   @relation(fields: [purchaseId], references: [id], onDelete: Cascade)
+  statement CreditCardStatement? @relation(fields: [statementId], references: [id])
+
+  @@unique([purchaseId, installmentNumber])
+  @@index([workspaceId, dueYear, dueMonth])
+  @@index([statementId])
+  @@index([deletedAt])
+}
+
+model CreditCardStatement {
+  id                   String                    @id @default(uuid()) @db.Uuid
+  workspaceId          String                    @db.Uuid
+  creditCardId         String                    @db.Uuid
+  periodYear           Int
+  periodMonth          Int
+  closingDate          DateTime
+  dueDate              DateTime
+  totalAmount          Decimal                   @default(0) @db.Decimal(14, 2)
+  minimumPaymentAmount Decimal?                  @db.Decimal(14, 2)
+  status               CreditCardStatementStatus @default(OPEN)
+  createdAt            DateTime                  @default(now())
+  updatedAt            DateTime                  @updatedAt
+  deletedAt            DateTime?
+
+  workspace    Workspace               @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  creditCard   CreditCard              @relation(fields: [creditCardId], references: [id], onDelete: Cascade)
+  installments CreditCardInstallment[]
+  payments     CreditCardPayment[]
+  reminders    Reminder[]
+
+  @@unique([creditCardId, periodYear, periodMonth])
+  @@index([workspaceId, dueDate])
+  @@index([status])
+  @@index([deletedAt])
+}
+
+model CreditCardPayment {
+  id            String   @id @default(uuid()) @db.Uuid
+  workspaceId   String   @db.Uuid
+  creditCardId  String   @db.Uuid
+  statementId   String?  @db.Uuid
+  accountId     String?  @db.Uuid
+  transactionId String?  @unique @db.Uuid
+  createdById   String?  @db.Uuid
+  amount        Decimal  @db.Decimal(14, 2)
+  currency      String   @default("ARS") @db.VarChar(3)
+  paidAt        DateTime
+  notes         String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  deletedAt     DateTime?
+
+  workspace   Workspace            @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  creditCard  CreditCard           @relation(fields: [creditCardId], references: [id], onDelete: Cascade)
+  statement   CreditCardStatement? @relation(fields: [statementId], references: [id])
+  account     FinancialAccount?    @relation(fields: [accountId], references: [id])
+  transaction Transaction?         @relation(fields: [transactionId], references: [id])
+  createdBy   User?                @relation("CreditCardPaymentCreatedBy", fields: [createdById], references: [id])
+
+  @@index([workspaceId, paidAt])
+  @@index([creditCardId])
+  @@index([statementId])
+  @@index([accountId])
+  @@index([createdById])
+  @@index([deletedAt])
+}
+
+model RecurringRule {
+  id                   String             @id @default(uuid()) @db.Uuid
+  workspaceId          String             @db.Uuid
+  sourceAccountId      String?            @db.Uuid
+  destinationAccountId String?            @db.Uuid
+  categoryId           String?            @db.Uuid
+  projectId            String?            @db.Uuid
+  creditCardId         String?            @db.Uuid
+  createdById          String?            @db.Uuid
+  type                 TransactionType
+  status               RecurringStatus    @default(ACTIVE)
+  frequency            RecurringFrequency
+  interval             Int                @default(1)
+  amount               Decimal            @db.Decimal(14, 2)
+  currency             String             @default("ARS") @db.VarChar(3)
+  description          String
+  dayOfMonth           Int?
+  dayOfWeek            Int?
+  startAt              DateTime
+  endAt                DateTime?
+  nextRunAt            DateTime?
+  lastRunAt            DateTime?
+  autoCreateTransaction Boolean           @default(false)
+  notes                String?
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
+  deletedAt            DateTime?
+
+  workspace          Workspace          @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  sourceAccount      FinancialAccount?  @relation("RecurringSourceAccount", fields: [sourceAccountId], references: [id])
+  destinationAccount FinancialAccount?  @relation("RecurringDestinationAccount", fields: [destinationAccountId], references: [id])
+  category           Category?          @relation(fields: [categoryId], references: [id])
+  project            Project?           @relation(fields: [projectId], references: [id])
+  creditCard         CreditCard?        @relation(fields: [creditCardId], references: [id])
+  createdBy          User?              @relation("RecurringRuleCreatedBy", fields: [createdById], references: [id])
+  transactions       Transaction[]
+  subscription       Subscription?
+  reminders          Reminder[]
+
+  @@index([workspaceId, status])
+  @@index([nextRunAt])
+  @@index([sourceAccountId])
+  @@index([destinationAccountId])
+  @@index([categoryId])
+  @@index([projectId])
+  @@index([creditCardId])
+  @@index([createdById])
+  @@index([deletedAt])
+}
+
+model Subscription {
+  id              String             @id @default(uuid()) @db.Uuid
+  workspaceId     String             @db.Uuid
+  sourceAccountId String?            @db.Uuid
+  creditCardId    String?            @db.Uuid
+  categoryId      String?            @db.Uuid
+  projectId       String?            @db.Uuid
+  recurringRuleId String?            @unique @db.Uuid
+  createdById     String?            @db.Uuid
+  name            String
+  provider        String?
+  status          RecurringStatus    @default(ACTIVE)
+  frequency       RecurringFrequency @default(MONTHLY)
+  interval        Int                @default(1)
+  amount          Decimal            @db.Decimal(14, 2)
+  currency        String             @default("ARS") @db.VarChar(3)
+  nextBillingAt   DateTime?
+  startedAt       DateTime?
+  endedAt         DateTime?
+  url             String?
+  notes           String?
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+  deletedAt       DateTime?
+
+  workspace     Workspace         @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  sourceAccount FinancialAccount? @relation("SubscriptionSourceAccount", fields: [sourceAccountId], references: [id])
+  creditCard    CreditCard?       @relation(fields: [creditCardId], references: [id])
+  category      Category?         @relation(fields: [categoryId], references: [id])
+  project       Project?          @relation(fields: [projectId], references: [id])
+  recurringRule RecurringRule?    @relation(fields: [recurringRuleId], references: [id])
+  createdBy     User?             @relation("SubscriptionCreatedBy", fields: [createdById], references: [id])
+  reminders     Reminder[]
+
+  @@index([workspaceId, status])
+  @@index([nextBillingAt])
+  @@index([sourceAccountId])
+  @@index([creditCardId])
+  @@index([categoryId])
+  @@index([projectId])
+  @@index([createdById])
+  @@index([deletedAt])
+}
+
+model Project {
+  id             String        @id @default(uuid()) @db.Uuid
+  workspaceId    String        @db.Uuid
+  createdById    String?       @db.Uuid
+  name           String
+  type           ProjectType   @default(CLIENT_PROJECT)
+  status         ProjectStatus @default(ACTIVE)
+  clientName     String?
+  currency       String        @default("ARS") @db.VarChar(3)
+  budgetAmount   Decimal?      @db.Decimal(14, 2)
+  expectedIncome Decimal?      @db.Decimal(14, 2)
+  startDate      DateTime?
+  endDate        DateTime?
+  notes          String?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  deletedAt      DateTime?
+
+  workspace     Workspace            @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  createdBy     User?                @relation("ProjectCreatedBy", fields: [createdById], references: [id])
+  transactions  Transaction[]
+  cardPurchases CreditCardPurchase[]
+  recurringRules RecurringRule[]
+  subscriptions Subscription[]
+  receivables   Receivable[]
+  payables      Payable[]
+  budgets       Budget[]
+
+  @@index([workspaceId, status])
+  @@index([createdById])
+  @@index([deletedAt])
+}
+
+model Receivable {
+  id            String           @id @default(uuid()) @db.Uuid
+  workspaceId   String           @db.Uuid
+  projectId     String?          @db.Uuid
+  transactionId String?          @unique @db.Uuid
+  createdById   String?          @db.Uuid
+  title         String
+  counterparty  String?
+  amount        Decimal          @db.Decimal(14, 2)
+  paidAmount    Decimal          @default(0) @db.Decimal(14, 2)
+  currency      String           @default("ARS") @db.VarChar(3)
+  status        ReceivableStatus @default(PENDING)
+  issuedAt      DateTime?
+  dueDate       DateTime?
+  collectedAt   DateTime?
+  notes         String?
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+  deletedAt     DateTime?
+
+  workspace   Workspace    @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  project     Project?     @relation(fields: [projectId], references: [id])
+  transaction Transaction? @relation(fields: [transactionId], references: [id])
+  createdBy   User?        @relation("ReceivableCreatedBy", fields: [createdById], references: [id])
+  reminders   Reminder[]
+
+  @@index([workspaceId, status])
+  @@index([dueDate])
+  @@index([projectId])
+  @@index([createdById])
+  @@index([deletedAt])
+}
+
+model Payable {
+  id            String        @id @default(uuid()) @db.Uuid
+  workspaceId   String        @db.Uuid
+  projectId     String?       @db.Uuid
+  accountId     String?       @db.Uuid
+  transactionId String?       @unique @db.Uuid
+  createdById   String?       @db.Uuid
+  title         String
+  counterparty  String?
+  amount        Decimal       @db.Decimal(14, 2)
+  paidAmount    Decimal       @default(0) @db.Decimal(14, 2)
+  currency      String        @default("ARS") @db.VarChar(3)
+  status        PayableStatus @default(PENDING)
+  issuedAt      DateTime?
+  dueDate       DateTime?
+  paidAt        DateTime?
+  notes         String?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  deletedAt     DateTime?
+
+  workspace   Workspace         @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  project     Project?          @relation(fields: [projectId], references: [id])
+  account     FinancialAccount? @relation("PayableAccount", fields: [accountId], references: [id])
+  transaction Transaction?      @relation(fields: [transactionId], references: [id])
+  createdBy   User?             @relation("PayableCreatedBy", fields: [createdById], references: [id])
+  reminders   Reminder[]
+
+  @@index([workspaceId, status])
+  @@index([dueDate])
+  @@index([projectId])
+  @@index([accountId])
+  @@index([createdById])
+  @@index([deletedAt])
+}
+
+model Budget {
+  id          String       @id @default(uuid()) @db.Uuid
+  workspaceId String       @db.Uuid
+  categoryId  String?      @db.Uuid
+  projectId   String?      @db.Uuid
+  createdById String?      @db.Uuid
+  name        String
+  period      BudgetPeriod @default(MONTHLY)
+  amount      Decimal      @db.Decimal(14, 2)
+  currency    String       @default("ARS") @db.VarChar(3)
+  startsAt    DateTime
+  endsAt      DateTime
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  deletedAt   DateTime?
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  category  Category? @relation(fields: [categoryId], references: [id])
+  project   Project?  @relation(fields: [projectId], references: [id])
+  createdBy User?     @relation("BudgetCreatedBy", fields: [createdById], references: [id])
+
+  @@index([workspaceId, startsAt, endsAt])
+  @@index([categoryId])
+  @@index([projectId])
+  @@index([createdById])
+  @@index([deletedAt])
+}
+
+model Reminder {
+  id                    String         @id @default(uuid()) @db.Uuid
+  workspaceId           String         @db.Uuid
+  payableId             String?        @db.Uuid
+  receivableId          String?        @db.Uuid
+  creditCardStatementId String?        @db.Uuid
+  recurringRuleId       String?        @db.Uuid
+  subscriptionId        String?        @db.Uuid
+  createdById           String?        @db.Uuid
+  title                 String
+  description           String?
+  dueAt                 DateTime
+  status                ReminderStatus @default(PENDING)
+  snoozedUntil          DateTime?
+  completedAt           DateTime?
+  createdAt             DateTime       @default(now())
+  updatedAt             DateTime       @updatedAt
+  deletedAt             DateTime?
+
+  workspace           Workspace            @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  payable             Payable?             @relation(fields: [payableId], references: [id])
+  receivable          Receivable?          @relation(fields: [receivableId], references: [id])
+  creditCardStatement CreditCardStatement? @relation(fields: [creditCardStatementId], references: [id])
+  recurringRule       RecurringRule?       @relation(fields: [recurringRuleId], references: [id])
+  subscription        Subscription?        @relation(fields: [subscriptionId], references: [id])
+  createdBy           User?                @relation("ReminderCreatedBy", fields: [createdById], references: [id])
+
+  @@index([workspaceId, status])
+  @@index([dueAt])
+  @@index([payableId])
+  @@index([receivableId])
+  @@index([creditCardStatementId])
+  @@index([recurringRuleId])
+  @@index([subscriptionId])
+  @@index([createdById])
+  @@index([deletedAt])
+}
