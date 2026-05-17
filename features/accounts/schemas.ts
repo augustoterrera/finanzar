@@ -23,6 +23,8 @@ export const createAccountSchema = z.object({
   openingBalance: z.coerce.number().finite("Ingresá un saldo válido."),
 });
 
+export const updateAccountSchema = createAccountSchema;
+
 export type CreateAccountState = {
   error?: string;
   fieldErrors?: {

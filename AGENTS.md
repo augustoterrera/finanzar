@@ -26,6 +26,12 @@ Design flows so the next action is obvious. Prefer guided empty states, helpful 
 
 Keep forms simple and forgiving: use clear field names, examples/placeholders, sensible defaults, validation messages in everyday language, and avoid asking for information before it is actually needed.
 
+For CRUD/list screens, keep the list view clean and scannable. Show records as compact cards with the most important information and visible edit/delete actions. Do not render full edit forms inside every list item.
+
+On mobile, edit/create secondary flows should open in a modal, dialog, drawer, or bottom sheet-style surface when appropriate. The default list should stay readable, with details and forms shown only when the user asks to edit or add.
+
+Delete actions must be explicit and visually separate from edit actions. Prefer a confirmation step for destructive actions once the UX layer is mature.
+
 ## Icons
 
 Use `lucide-react` for icons when needed.

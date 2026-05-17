@@ -16,26 +16,26 @@ This roadmap is the product planning reference for Finanzar. Keep it updated whe
 
 ## Phase 2 - Core Finance
 
-- [ ] Accounts CRUD
-- [ ] Categories CRUD
-- [ ] Income transaction flow
-- [ ] Expense transaction flow
-- [ ] Transaction list
-- [ ] Transaction edit/delete
-- [ ] Monthly dashboard
-- [ ] Account balances
-- [ ] Basic workspace settings
+- [x] Accounts CRUD
+- [x] Categories CRUD
+- [x] Income transaction flow
+- [x] Expense transaction flow
+- [x] Transaction list
+- [x] Transaction edit/delete
+- [x] Monthly dashboard
+- [x] Account balances
+- [x] Basic workspace settings
 
 ## Phase 3 - Mobile App Experience
 
-- [ ] Mobile-first app shell
-- [ ] Bottom navigation
-- [ ] Quick add expense flow
-- [ ] Quick add income flow
-- [ ] PWA manifest
-- [ ] Installable app icons
-- [ ] Splash screen metadata
-- [ ] Read-only offline cache
+- [x] Mobile-first app shell
+- [x] Bottom navigation
+- [x] Quick add expense flow
+- [x] Quick add income flow
+- [x] PWA manifest
+- [x] Installable app icons
+- [x] Splash screen metadata
+- [x] Read-only offline cache
 
 ## Phase 4 - Credit Cards
 
