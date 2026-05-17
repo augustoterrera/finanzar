@@ -10,7 +10,10 @@ const accountTypes = [
 ] as const;
 
 export const createAccountSchema = z.object({
-  name: z.string().trim().min(2, "Ingresá un nombre para la cuenta."),
+  name: z
+    .string()
+    .trim()
+    .min(2, "Ingresá un nombre para identificar dónde tenés esa plata."),
   type: z.enum(accountTypes),
   currency: z
     .string()

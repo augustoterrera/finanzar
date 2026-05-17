@@ -18,6 +18,14 @@ Do not introduce a new visual theme unless explicitly requested.
 
 The UI should feel like a practical finance app: clear, calm, dense enough for repeated use, and optimized for mobile.
 
+Always prioritize UX/UI clarity. The product should be usable and understandable by people of any age and any level of financial or technical experience.
+
+Use plain, familiar language in Spanish for user-facing text. Avoid ambiguous labels when a term can mean more than one thing. For example, prefer "cuenta financiera", "cuenta bancaria", "billetera" or "caja" instead of only "cuenta" when it could be confused with a user account.
+
+Design flows so the next action is obvious. Prefer guided empty states, helpful labels, short explanations, and visible feedback over assuming the user already understands the financial model.
+
+Keep forms simple and forgiving: use clear field names, examples/placeholders, sensible defaults, validation messages in everyday language, and avoid asking for information before it is actually needed.
+
 ## Icons
 
 Use `lucide-react` for icons when needed.

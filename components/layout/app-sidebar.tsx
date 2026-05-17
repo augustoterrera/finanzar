@@ -23,7 +23,7 @@ type AppSidebarProps = {
 
 export function AppSidebar({ workspaceName }: AppSidebarProps) {
   return (
-    <aside className="sticky top-0 hidden h-svh w-64 shrink-0 border-r border-border bg-surface px-4 py-5 md:block">
+    <aside className="sticky top-0 hidden h-dvh w-64 shrink-0 border-r border-border bg-surface px-4 py-5 md:block">
       <div className="mb-8">
         <p className="text-sm font-semibold text-primary">Finanzar</p>
         <h2 className="mt-1 truncate text-lg font-bold">{workspaceName}</h2>

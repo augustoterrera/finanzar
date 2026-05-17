@@ -17,14 +17,17 @@ export function CreateAccountForm() {
   );
 
   return (
-    <form action={formAction} className="grid gap-4">
+    <form action={formAction} className="grid min-w-0 gap-3.5">
       {state.error ? (
         <p className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
           {state.error}
         </p>
       ) : null}
 
-      <FieldShell error={state.fieldErrors?.name?.[0]} label="Nombre">
+      <FieldShell
+        error={state.fieldErrors?.name?.[0]}
+        label="Nombre"
+      >
         <TextInput
           autoComplete="off"
           name="name"
@@ -34,18 +37,21 @@ export function CreateAccountForm() {
         />
       </FieldShell>
 
-      <FieldShell error={state.fieldErrors?.type?.[0]} label="Tipo">
+      <FieldShell
+        error={state.fieldErrors?.type?.[0]}
+        label="Tipo"
+      >
         <SelectInput defaultValue="BANK" name="type" required>
-          <option value="BANK">Banco</option>
-          <option value="CASH">Efectivo</option>
+          <option value="BANK">Cuenta bancaria</option>
+          <option value="CASH">Efectivo / caja</option>
           <option value="DIGITAL_WALLET">Billetera virtual</option>
-          <option value="SAVINGS">Ahorro</option>
-          <option value="INVESTMENT">Inversión</option>
-          <option value="OTHER">Otra</option>
+          <option value="SAVINGS">Ahorros</option>
+          <option value="INVESTMENT">Inversiones</option>
+          <option value="OTHER">Otro lugar</option>
         </SelectInput>
       </FieldShell>
 
-      <div className="grid grid-cols-[1fr_1.4fr] gap-3">
+      <div className="grid min-w-0 gap-3 min-[380px]:grid-cols-[0.8fr_1.2fr]">
         <FieldShell error={state.fieldErrors?.currency?.[0]} label="Moneda">
           <TextInput
             defaultValue="ARS"
@@ -58,7 +64,7 @@ export function CreateAccountForm() {
 
         <FieldShell
           error={state.fieldErrors?.openingBalance?.[0]}
-          label="Saldo inicial"
+          label="Saldo actual"
         >
           <TextInput
             defaultValue="0"
@@ -71,9 +77,17 @@ export function CreateAccountForm() {
         </FieldShell>
       </div>
 
-      <Button className="min-h-12 text-base" disabled={isPending} type="submit">
+      <p className="text-sm leading-5 text-muted">
+        Si no sabés el saldo exacto, dejalo en 0.
+      </p>
+
+      <Button
+        className="mt-1 min-h-12 w-full text-base"
+        disabled={isPending}
+        type="submit"
+      >
         <Landmark aria-hidden="true" size={19} />
-        {isPending ? "Creando..." : "Crear cuenta"}
+        {isPending ? "Guardando..." : "Continuar"}
       </Button>
     </form>
   );

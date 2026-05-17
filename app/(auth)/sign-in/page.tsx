@@ -12,7 +12,7 @@ export default async function SignInPage() {
   }
 
   return (
-    <main className="flex min-h-svh flex-col justify-center px-5 py-10">
+    <main className="flex min-h-dvh flex-col justify-center px-5 py-10">
       <div className="mx-auto grid w-full max-w-sm gap-8">
         <div className="grid gap-2">
           <p className="text-sm font-semibold text-primary">Finanzar</p>
