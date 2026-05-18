@@ -4,8 +4,8 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   ChartNoAxesCombined,
+  CalendarDays,
   CreditCard,
-  FolderKanban,
   List,
   Settings,
   Wallet,
@@ -18,7 +18,7 @@ const items = [
   { href: "/accounts", icon: Wallet, label: "Ctas." },
   { href: "/transactions", icon: List, label: "Movs." },
   { href: "/cards", icon: CreditCard, label: "Tarj." },
-  { href: "/projects", icon: FolderKanban, label: "Proy." },
+  { href: "/planning", icon: CalendarDays, label: "Plan" },
   { href: "/settings", icon: Settings, label: "Ajustes" },
 ];
 

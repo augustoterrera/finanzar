@@ -1,5 +1,6 @@
 import Link from "next/link";
 import {
+  CalendarDays,
   ChartNoAxesCombined,
   CreditCard,
   FolderKanban,
@@ -13,6 +14,7 @@ const items = [
   { href: "/accounts", icon: Wallet, label: "Cuentas" },
   { href: "/transactions", icon: List, label: "Movimientos" },
   { href: "/cards", icon: CreditCard, label: "Tarjetas" },
+  { href: "/planning", icon: CalendarDays, label: "Planificación" },
   { href: "/projects", icon: FolderKanban, label: "Proyectos" },
   { href: "/settings", icon: Settings, label: "Ajustes" },
 ];

@@ -50,12 +50,12 @@ This roadmap is the product planning reference for Finanzar. Keep it updated whe
 
 ## Phase 5 - Planning
 
-- [ ] Recurring incomes
-- [ ] Recurring expenses
-- [ ] Subscriptions
-- [ ] Budgets
-- [ ] Reminders
-- [ ] Expected cashflow
+- [x] Recurring incomes
+- [x] Recurring expenses
+- [x] Subscriptions
+- [x] Budgets
+- [x] Reminders
+- [x] Expected cashflow
 
 ## Phase 6 - Projects And Business
 
