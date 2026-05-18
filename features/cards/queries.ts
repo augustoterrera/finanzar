@@ -24,12 +24,14 @@ export type CardPurchaseOverview = {
   installmentsCount: number;
   merchant?: string;
   purchasedAt: Date;
+  registeredInstallmentsCount: number;
   totalAmount: number;
 };
 
 export type CreditCardOverview = {
   availableCredit?: number;
   closingDay: number;
+  color: string;
   creditLimit?: number;
   currency: string;
   currentDebt: number;
@@ -192,6 +194,7 @@ export async function getCardsPageData() {
       availableCredit:
         creditLimit === undefined ? undefined : Math.max(creditLimit - currentDebt, 0),
       closingDay: card.closingDay,
+      color: card.color ?? "#378add",
       creditLimit,
       currency: card.currency,
       currentDebt,
@@ -212,6 +215,7 @@ export async function getCardsPageData() {
         installmentsCount: purchase.installmentsCount,
         merchant: purchase.merchant ?? undefined,
         purchasedAt: purchase.purchasedAt,
+        registeredInstallmentsCount: purchase.installments.length,
         totalAmount: Number(purchase.totalAmount),
       })),
       statements,

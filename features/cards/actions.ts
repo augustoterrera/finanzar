@@ -44,6 +44,7 @@ export async function createCreditCardAction(formData: FormData) {
   await prisma.creditCard.create({
     data: {
       closingDay: parsedInput.data.closingDay,
+      color: parsedInput.data.color,
       createdById: user.id,
       creditLimit: parsedInput.data.creditLimit,
       currency: parsedInput.data.currency,
@@ -51,7 +52,7 @@ export async function createCreditCardAction(formData: FormData) {
       issuer: parsedInput.data.issuer,
       lastFour: parsedInput.data.lastFour,
       name: parsedInput.data.name,
-      network: parsedInput.data.network,
+      network: parsedInput.data.network ?? "OTHER",
       ownerMemberId: activeWorkspace.member.id,
       paymentAccountId: parsedInput.data.paymentAccountId,
       workspaceId: activeWorkspace.workspace.id,
@@ -87,6 +88,7 @@ export async function updateCreditCardAction(cardId: string, formData: FormData)
     },
     data: {
       closingDay: parsedInput.data.closingDay,
+      color: parsedInput.data.color,
       creditLimit: parsedInput.data.creditLimit,
       currency: parsedInput.data.currency,
       dueDay: parsedInput.data.dueDay,
@@ -136,6 +138,8 @@ export async function createCardPurchaseAction(formData: FormData) {
     categoryId: formData.get("categoryId"),
     creditCardId: formData.get("creditCardId"),
     description: formData.get("description"),
+    firstInstallmentNumber: formData.get("firstInstallmentNumber") ?? "1",
+    firstStatementPeriod: formData.get("firstStatementPeriod") ?? "",
     installmentsCount: formData.get("installmentsCount"),
     merchant: formData.get("merchant"),
     purchasedAt: formData.get("purchasedAt"),
@@ -185,18 +189,19 @@ export async function createCardPurchaseAction(formData: FormData) {
       },
     });
 
-    const firstPeriod = getStatementPeriodForPurchase(
-      parsedInput.data.purchasedAt,
-      card.closingDay,
-    );
+    const firstPeriod =
+      parsedInput.data.firstStatementPeriod ??
+      getStatementPeriodForPurchase(parsedInput.data.purchasedAt, card.closingDay);
     const installmentAmounts = splitAmountIntoInstallments(
       parsedInput.data.totalAmount,
       parsedInput.data.installmentsCount,
     );
     const statementIds = new Set<string>();
+    const firstInstallmentIndex = parsedInput.data.firstInstallmentNumber - 1;
 
-    for (const [index, amount] of installmentAmounts.entries()) {
-      const period = addMonthsToPeriod(firstPeriod, index);
+    for (let index = firstInstallmentIndex; index < installmentAmounts.length; index += 1) {
+      const amount = installmentAmounts[index];
+      const period = addMonthsToPeriod(firstPeriod, index - firstInstallmentIndex);
       const statement = await upsertStatementForPeriod(
         tx,
         activeWorkspace.workspace.id,
@@ -393,13 +398,14 @@ export async function createCardPaymentAction(formData: FormData) {
 function getCreditCardInput(formData: FormData) {
   return {
     closingDay: formData.get("closingDay"),
+    color: formData.get("color"),
     creditLimit: formData.get("creditLimit"),
     currency: formData.get("currency"),
     dueDay: formData.get("dueDay"),
     issuer: formData.get("issuer"),
     lastFour: formData.get("lastFour"),
     name: formData.get("name"),
-    network: formData.get("network"),
+    network: formData.get("network") || undefined,
     paymentAccountId: formData.get("paymentAccountId"),
   };
 }

@@ -392,6 +392,7 @@ model CreditCard {
   issuer           String?
   network          CardNetwork @default(OTHER)
   lastFour         String?
+  color            String?
   currency         String      @default("ARS") @db.VarChar(3)
   creditLimit      Decimal?    @db.Decimal(14, 2)
   closingDay       Int

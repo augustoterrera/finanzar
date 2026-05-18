@@ -38,15 +38,6 @@ type CardsDashboardProps = {
   forecast: CardForecastMonth[];
 };
 
-const networkLabels: Record<string, string> = {
-  AMEX: "American Express",
-  CABAL: "Cabal",
-  MASTERCARD: "Mastercard",
-  NARANJA: "Naranja",
-  OTHER: "Otra",
-  VISA: "Visa",
-};
-
 const statusLabels: Record<CardStatementOverview["status"], string> = {
   CLOSED: "Cerrado",
   OPEN: "Abierto",
@@ -80,7 +71,7 @@ function CreditCardCreateCard({ accounts }: { accounts: FinancialAccount[] }) {
       <form action={createCreditCardAction} className="grid gap-3">
         <SectionTitle
           icon={<CreditCard aria-hidden="true" size={20} />}
-          subtitle="Cargá el cierre y vencimiento para generar resúmenes."
+          subtitle="Solo necesitás un nombre, cierre y vencimiento."
           title="Nueva tarjeta de crédito"
         />
 
@@ -121,7 +112,7 @@ function CardPurchaseCreateCard({
       <form action={createCardPurchaseAction} className="grid gap-3">
         <SectionTitle
           icon={<ReceiptText aria-hidden="true" size={20} />}
-          subtitle="Las cuotas se asignan al resumen que corresponde."
+          subtitle="Podés cargar compras nuevas o cuotas que ya venías pagando."
           title="Nueva compra"
         />
 
@@ -157,6 +148,30 @@ function CardPurchaseCreateCard({
               step="1"
               type="number"
             />
+          </FieldShell>
+        </div>
+
+        <div className="grid gap-3 min-[420px]:grid-cols-2">
+          <FieldShell
+            helper="Dejalo en 1 para una compra nueva."
+            label="Primera cuota a cargar"
+          >
+            <TextInput
+              defaultValue="1"
+              inputMode="numeric"
+              min="1"
+              name="firstInstallmentNumber"
+              required
+              step="1"
+              type="number"
+            />
+          </FieldShell>
+
+          <FieldShell
+            helper="Solo si ya venías pagando esta compra."
+            label="Primer resumen a cargar"
+          >
+            <TextInput name="firstStatementPeriod" type="month" />
           </FieldShell>
         </div>
 
@@ -233,12 +248,12 @@ function CreditCardList({
           <Card className="p-4" key={card.id}>
             <div className="flex items-start gap-3">
               <div className="flex size-11 shrink-0 items-center justify-center rounded-lg bg-surface-muted text-primary">
-                <CreditCard aria-hidden="true" size={22} />
+                <CreditCard aria-hidden="true" color={card.color} size={22} />
               </div>
               <div className="min-w-0 flex-1">
                 <h2 className="truncate font-bold">{card.name}</h2>
                 <p className="text-sm text-muted">
-                  {[card.issuer, networkLabels[card.network], card.lastFour ? `termina en ${card.lastFour}` : undefined]
+                  {[card.lastFour ? `Termina en ${card.lastFour}` : undefined, card.paymentAccountName]
                     .filter(Boolean)
                     .join(" · ")}
                 </p>
@@ -265,18 +280,10 @@ function CreditCardList({
               </div>
             </div>
 
-            <div className="mt-4 grid grid-cols-2 gap-3 min-[520px]:grid-cols-4">
+            <div className="mt-4 grid grid-cols-3 gap-3">
               <Metric
                 label="Deuda actual"
                 value={formatCurrency(card.currentDebt, card.currency)}
-              />
-              <Metric
-                label="Disponible"
-                value={
-                  card.availableCredit === undefined
-                    ? "Sin límite"
-                    : formatCurrency(card.availableCredit, card.currency)
-                }
               />
               <Metric label="Cierre" value={`Día ${card.closingDay}`} />
               <Metric label="Vence" value={`Día ${card.dueDay}`} />
@@ -490,7 +497,10 @@ function PurchasesList({ card }: { card: CreditCardOverview }) {
                 <p className="font-bold">
                   {formatCurrency(purchase.totalAmount, card.currency)}
                 </p>
-                <p className="text-sm text-muted">{purchase.installmentsCount} cuota(s)</p>
+                <p className="text-sm text-muted">
+                  {purchase.registeredInstallmentsCount} de{" "}
+                  {purchase.installmentsCount} cuota(s)
+                </p>
               </div>
               <form action={deleteAction}>
                 <Button title="Eliminar compra" type="submit" variant="secondary">
@@ -514,7 +524,10 @@ function CreditCardFields({
 }) {
   return (
     <>
-      <FieldShell label="Nombre">
+      <FieldShell
+        helper="Usá el nombre que vos reconocés: Visa banco, Mastercard personal, Naranja."
+        label="Nombre para mostrar"
+      >
         <TextInput
           autoComplete="off"
           defaultValue={card?.name}
@@ -525,30 +538,15 @@ function CreditCardFields({
         />
       </FieldShell>
 
-      <div className="grid gap-3 min-[420px]:grid-cols-2">
-        <FieldShell label="Entidad">
+      <div className="grid grid-cols-2 gap-3">
+        <FieldShell label="Color">
           <TextInput
-            autoComplete="off"
-            defaultValue={card?.issuer}
-            name="issuer"
-            placeholder="Banco o emisor"
-            type="text"
+            defaultValue={card?.color ?? "#378add"}
+            name="color"
+            type="color"
           />
         </FieldShell>
 
-        <FieldShell label="Marca">
-          <SelectInput defaultValue={card?.network ?? "VISA"} name="network" required>
-            <option value="VISA">Visa</option>
-            <option value="MASTERCARD">Mastercard</option>
-            <option value="AMEX">American Express</option>
-            <option value="CABAL">Cabal</option>
-            <option value="NARANJA">Naranja</option>
-            <option value="OTHER">Otra</option>
-          </SelectInput>
-        </FieldShell>
-      </div>
-
-      <div className="grid grid-cols-2 gap-3">
         <FieldShell label="Últimos 4 números">
           <TextInput
             defaultValue={card?.lastFour}
@@ -560,29 +558,11 @@ function CreditCardFields({
           />
         </FieldShell>
 
-        <FieldShell label="Moneda">
-          <TextInput
-            defaultValue={card?.currency ?? "ARS"}
-            maxLength={3}
-            name="currency"
-            required
-            type="text"
-          />
-        </FieldShell>
       </div>
 
-      <div className="grid grid-cols-3 gap-3">
-        <FieldShell label="Límite">
-          <TextInput
-            defaultValue={card?.creditLimit?.toString()}
-            inputMode="decimal"
-            name="creditLimit"
-            placeholder="Opcional"
-            step="0.01"
-            type="number"
-          />
-        </FieldShell>
+      <input name="currency" type="hidden" value={card?.currency ?? "ARS"} />
 
+      <div className="grid grid-cols-2 gap-3">
         <FieldShell label="Cierre">
           <TextInput
             defaultValue={card?.closingDay ?? 25}
