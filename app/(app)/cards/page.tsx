@@ -1,22 +1,20 @@
 import { AppHeader } from "@/components/layout/app-header";
-import { Card } from "@/components/ui/card";
-import { requireActiveWorkspace } from "@/features/workspaces/queries";
+import { CardsDashboard } from "@/features/cards/components/cards-dashboard";
+import { getCardsPageData } from "@/features/cards/queries";
 
 export default async function CardsPage() {
-  const activeWorkspace = await requireActiveWorkspace();
+  const { accounts, cards, categories, forecast, workspace } =
+    await getCardsPageData();
 
   return (
     <main className="grid gap-6">
-      <AppHeader
-        title="Tarjetas"
-        workspaceName={activeWorkspace.workspace.name}
+      <AppHeader title="Tarjetas" workspaceName={workspace.name} />
+      <CardsDashboard
+        accounts={accounts}
+        cards={cards}
+        categories={categories}
+        forecast={forecast}
       />
-      <Card>
-        <h2 className="text-lg font-bold">Tarjetas y resúmenes</h2>
-        <p className="mt-2 text-sm text-muted">
-          Esta sección va a manejar consumos, cierres, vencimientos y pagos.
-        </p>
-      </Card>
     </main>
   );
 }

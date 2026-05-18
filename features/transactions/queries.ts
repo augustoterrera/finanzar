@@ -78,7 +78,7 @@ export async function getWorkspaceBalance() {
     where: {
       deletedAt: null,
       type: {
-        in: ["INCOME", "EXPENSE"],
+        in: ["INCOME", "EXPENSE", "CARD_PAYMENT"],
       },
       workspaceId: activeWorkspace.workspace.id,
     },
@@ -99,6 +99,10 @@ export async function getWorkspaceBalance() {
     }
 
     if (transaction.type === "EXPENSE") {
+      return total - Number(transaction.amount);
+    }
+
+    if (transaction.type === "CARD_PAYMENT") {
       return total - Number(transaction.amount);
     }
 

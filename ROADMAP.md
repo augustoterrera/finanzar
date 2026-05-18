@@ -39,14 +39,14 @@ This roadmap is the product planning reference for Finanzar. Keep it updated whe
 
 ## Phase 4 - Credit Cards
 
-- [ ] Credit card CRUD
-- [ ] Closing day and due day setup
-- [ ] Card purchases
-- [ ] Installments
-- [ ] Monthly statements
-- [ ] Card payments
-- [ ] Due date reminders
-- [ ] Card debt forecast
+- [x] Credit card CRUD
+- [x] Closing day and due day setup
+- [x] Card purchases
+- [x] Installments
+- [x] Monthly statements
+- [x] Card payments
+- [x] Due date reminders
+- [x] Card debt forecast
 
 ## Phase 5 - Planning
 
