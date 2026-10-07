@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX `transactions_recurring_rule_month_unique` ON `transactions` (`recurring_rule_id`,`month`) WHERE "transactions"."recurring_rule_id" IS NOT NULL;

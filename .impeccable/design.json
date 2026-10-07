@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-06T00:00:00-03:00",
+  "title": "Finanzar — Inicio",
+  "extensions": {
+    "motion": [
+      { "name": "account-chevron", "value": "transform 150ms", "purpose": "Indica abierto/cerrado; desactivado con prefers-reduced-motion." }
+    ],
+    "breakpoints": [
+      { "name": "sm", "value": "640px" },
+      { "name": "md", "value": "768px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Cuenta por responsable y tarjeta",
+      "kind": "card",
+      "refersTo": "expense-account",
+      "description": "Tarjeta cerrada por defecto, importe visible y suma completa al tocarla.",
+      "html": "<details class=\"ds-account\"><summary class=\"ds-summary\"><span>Tarjeta<br><small>Ver suma</small></span><strong>Importe</strong></summary><div class=\"ds-detail\"><div class=\"ds-row\"><span>Gasto</span><span>+ Importe</span></div><footer class=\"ds-total\"><span>Total</span><strong>Importe</strong></footer></div></details>",
+      "css": ".ds-account{font-family:Inter,sans-serif;border:1px solid oklch(92% .004 286.32);border-radius:16px;background:oklch(98.5% 0 0 / .7);color:oklch(21% .006 285.885)}.ds-summary{list-style:none;display:flex;justify-content:space-between;align-items:center;gap:12px;padding:16px;min-height:80px;box-sizing:border-box;cursor:pointer;border-radius:16px;font-size:14px;font-variant-numeric:tabular-nums}.ds-summary::-webkit-details-marker{display:none}.ds-summary:hover{background:oklch(96.7% .001 286.375 / .7)}.ds-summary:focus-visible{outline:2px solid oklch(54.6% .245 262.881);outline-offset:4px}.ds-summary small{font-size:12px;color:oklch(44.2% .017 285.786)}.ds-summary strong{font-size:16px;font-weight:600}.ds-detail{padding:0 20px 20px}.ds-row{display:flex;justify-content:space-between;gap:16px;border-top:1px solid oklch(92% .004 286.32);padding:12px 0;font-size:14px;font-variant-numeric:tabular-nums}.ds-total{display:flex;justify-content:space-between;align-items:baseline;gap:16px;border-top:2px solid oklch(70.5% .015 286.067);padding-top:16px;margin-top:12px;font-variant-numeric:tabular-nums}.ds-total strong{font-size:24px;font-weight:600}"
+    }
+  ],
+  "narrative": {
+    "northStar": "La cuenta en papel",
+    "overview": "Registro del inicio aprobado por el usuario, no una sustitución del diseño de las otras rutas. Se conserva la tipografía y las tres cards de importes anteriores. Las nuevas cuentas hacen visible cada sumando y su resultado.",
+    "keyCharacteristics": ["Agrupado por responsable", "Tarjetas cerradas con importe visible", "Suma completa al tocar"],
+    "rules": [],
+    "dos": ["Do mostrar cada sumando y total en centavos, formateados en pesos argentinos.", "Do mantener legible la descripción completa y alineados los importes."],
+    "donts": ["Don't confundir responsable con quien pagó la compra.", "Don't presentar las sumas de gastos cargados como un resumen bancario que incluye cargos no registrados."]
+  }
+}
