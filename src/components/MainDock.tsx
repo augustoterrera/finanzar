@@ -13,6 +13,7 @@ import {
   Wallet 
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { SignOutButton } from "@/components/SignOutButton";
 
 const NAV_LEFT = [
   { href: "/", icon: Home, label: "Inicio" },
@@ -28,6 +29,7 @@ const NAV_RIGHT = [
 
 export function MainDock() {
   const pathname = usePathname();
+  if (pathname.startsWith('/login')) return null;
 
   const renderIconLink = (item: { href: string; icon: typeof Home; label: string }) => {
     const isActive = pathname === item.href;
@@ -65,7 +67,7 @@ export function MainDock() {
   return (
     <nav
       aria-label="Navegación móvil"
-      className="flex items-center gap-1 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-md border border-zinc-200/60 dark:border-zinc-800/60 shadow-xl shadow-zinc-200/40 dark:shadow-black/60 rounded-full px-2 py-1.5"
+      className="flex max-w-[calc(100vw-1rem)] items-center gap-1 overflow-x-auto bg-white/95 dark:bg-zinc-900/95 backdrop-blur-md border border-zinc-200/60 dark:border-zinc-800/60 shadow-xl shadow-zinc-200/40 dark:shadow-black/60 rounded-full px-2 py-1.5"
     >
       {/* Left items: Inicio, Movimientos, Recurrentes */}
       {NAV_LEFT.map(renderIconLink)}
@@ -81,6 +83,7 @@ export function MainDock() {
 
       {/* Right items: Personas, Tarjetas, Medios */}
       {NAV_RIGHT.map(renderIconLink)}
+      <SignOutButton compact />
     </nav>
   );
 }

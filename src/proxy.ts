@@ -1,21 +1,25 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { isValidSession, SESSION_COOKIE_NAME } from './lib/auth';
+import { auth } from './lib/auth-provider';
+import { copyAuthCookies } from './lib/auth-cookies';
 
 export async function proxy(request: NextRequest) {
-  const sessionId = request.cookies.get(SESSION_COOKIE_NAME)?.value;
-  const isAuthenticated = await isValidSession(sessionId);
-  const isLoginRoute = request.nextUrl.pathname === '/login';
+  const { response: session, headers: sessionHeaders } = await auth.api.getSession({
+    headers: request.headers,
+    returnHeaders: true,
+  });
+  const isAuthenticated = Boolean(session);
+  const isLoginRoute = request.nextUrl.pathname.startsWith('/login');
 
   if (!isAuthenticated && !isLoginRoute) {
-    return NextResponse.redirect(new URL('/login', request.url));
+    return copyAuthCookies(sessionHeaders, NextResponse.redirect(new URL('/login', request.url)));
   }
 
   if (isAuthenticated && isLoginRoute) {
-    return NextResponse.redirect(new URL('/', request.url));
+    return copyAuthCookies(sessionHeaders, NextResponse.redirect(new URL('/', request.url)));
   }
 
-  return NextResponse.next();
+  return copyAuthCookies(sessionHeaders, NextResponse.next());
 }
 
 export const config = {

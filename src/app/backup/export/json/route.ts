@@ -1,8 +1,13 @@
 import { db } from '@/db';
 import { people, payment_methods, cards, recurring_rules, installment_groups, transactions, transaction_splits } from '@/db/schema';
 import { NextResponse } from 'next/server';
+import { hasValidSession } from '@/lib/auth';
 
 export async function GET() {
+  if (!(await hasValidSession())) {
+    return new NextResponse('No autorizado', { status: 401, headers: { 'Cache-Control': 'no-store' } });
+  }
+
   try {
     const exportData = {
       version: 1,
@@ -21,6 +26,7 @@ export async function GET() {
     return new NextResponse(JSON.stringify(exportData, null, 2), {
       headers: {
         'Content-Type': 'application/json',
+        'Cache-Control': 'private, no-store',
         'Content-Disposition': `attachment; filename="finanzar_backup_${new Date().toISOString().split('T')[0]}.json"`
       }
     });

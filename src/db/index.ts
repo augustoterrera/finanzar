@@ -1,6 +1,9 @@
 import { drizzle } from 'drizzle-orm/libsql';
 import { createClient, Client } from '@libsql/client';
-import * as schema from './schema';
+import * as appSchema from './schema';
+import * as authSchema from './auth-schema';
+
+const schema = { ...appSchema, ...authSchema };
 
 const dbUrl = process.env.TURSO_DATABASE_URL;
 const dbToken = process.env.TURSO_AUTH_TOKEN;

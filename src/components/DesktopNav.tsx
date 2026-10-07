@@ -4,8 +4,9 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
-import { Wallet, Plus } from "lucide-react";
+import { Plus } from "lucide-react";
 import { AnimatedShinyText } from "@/components/ui/animated-shiny-text";
+import { SignOutButton } from "@/components/SignOutButton";
 
 const NAV_LEFT = [
   { href: "/", label: "Inicio" },
@@ -21,6 +22,7 @@ const NAV_RIGHT = [
 
 export function DesktopNav() {
   const pathname = usePathname();
+  if (pathname.startsWith('/login')) return null;
 
   const renderLink = (item: { href: string; label: string }) => {
     const isActive = pathname === item.href;
@@ -72,6 +74,7 @@ export function DesktopNav() {
 
       {/* Right Links */}
       {NAV_RIGHT.map(renderLink)}
+      <SignOutButton />
     </nav>
   );
 }

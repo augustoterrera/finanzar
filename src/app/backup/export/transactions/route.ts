@@ -3,8 +3,13 @@ import { transactions, people, payment_methods, cards } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 import { toCsv } from '@/lib/csv';
 import { NextResponse } from 'next/server';
+import { hasValidSession } from '@/lib/auth';
 
 export async function GET() {
+  if (!(await hasValidSession())) {
+    return new NextResponse('No autorizado', { status: 401, headers: { 'Cache-Control': 'no-store' } });
+  }
+
   try {
     const txs = await db
       .select({
@@ -44,6 +49,7 @@ export async function GET() {
     return new NextResponse(csvContent, {
       headers: {
         'Content-Type': 'text/csv; charset=utf-8',
+        'Cache-Control': 'private, no-store',
         'Content-Disposition': `attachment; filename="finanzar_transactions_${new Date().toISOString().split('T')[0]}.csv"`
       }
     });
