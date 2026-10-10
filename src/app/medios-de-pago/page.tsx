@@ -8,6 +8,10 @@ export const metadata: Metadata = {
   title: 'Medios de Pago | Finanzar'
 };
 
+// This page reads live card/payment-method records from the database. Do not
+// serve a prerendered snapshot after cards are added or edited.
+export const dynamic = 'force-dynamic';
+
 export default async function MediosPage() {
   const allPaymentMethods = await db
     .select({

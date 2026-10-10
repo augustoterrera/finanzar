@@ -47,6 +47,7 @@ export async function createCardAction(prevState: any, formData: FormData) {
       due_day 
     });
     revalidatePath('/tarjetas');
+    revalidatePath('/medios-de-pago');
     return { success: true };
   } catch (e) {
     return { error: 'Error al crear tarjeta' };
@@ -80,6 +81,7 @@ export async function updateCardAction(prevState: any, formData: FormData) {
       .set({ name, owner_person_id, color, closing_day, due_day })
       .where(eq(cards.id, id));
     revalidatePath('/tarjetas');
+    revalidatePath('/medios-de-pago');
     return { success: true };
   } catch {
     return { error: 'Error al actualizar tarjeta' };
@@ -106,6 +108,7 @@ export async function deleteCardAction(prevState: any, formData: FormData) {
   try {
     await db.delete(cards).where(eq(cards.id, id));
     revalidatePath('/tarjetas');
+    revalidatePath('/medios-de-pago');
     return { success: true };
   } catch (e) {
     return { error: 'Error inesperado al borrar' };
