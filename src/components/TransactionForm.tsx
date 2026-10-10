@@ -467,7 +467,7 @@ export default function TransactionForm({
                 <option value="">Seleccionar...</option>
                 {availablePaymentMethods.map(method => (
                   <option key={method.id} value={method.id}>
-                    {method.name} {method.card_name && type === 'expense' ? `(${method.card_name})` : ''}
+                    {method.name}{method.card_name && method.card_name !== method.name && type === 'expense' ? ` (${method.card_name})` : ''}
                   </option>
                 ))}
               </select>

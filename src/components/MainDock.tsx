@@ -9,7 +9,6 @@ import {
   Repeat, 
   Plus, 
   Users, 
-  CreditCard, 
   Wallet 
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -23,8 +22,7 @@ const NAV_LEFT = [
 
 const NAV_RIGHT = [
   { href: "/personas", icon: Users, label: "Personas" },
-  { href: "/tarjetas", icon: CreditCard, label: "Tarjetas" },
-  { href: "/medios-de-pago", icon: Wallet, label: "Medios" },
+  { href: "/medios-de-pago", icon: Wallet, label: "Medios de pago" },
 ];
 
 export function MainDock() {
@@ -81,7 +79,7 @@ export function MainDock() {
         <Plus className="w-5 h-5" />
       </Link>
 
-      {/* Right items: Personas, Tarjetas, Medios */}
+      {/* Right items: Personas, Medios de pago */}
       {NAV_RIGHT.map(renderIconLink)}
       <SignOutButton compact />
     </nav>

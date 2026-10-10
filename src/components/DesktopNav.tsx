@@ -16,8 +16,7 @@ const NAV_LEFT = [
 
 const NAV_RIGHT = [
   { href: "/personas", label: "Personas" },
-  { href: "/tarjetas", label: "Tarjetas" },
-  { href: "/medios-de-pago", label: "Medios" },
+  { href: "/medios-de-pago", label: "Medios de pago" },
 ];
 
 export function DesktopNav() {
