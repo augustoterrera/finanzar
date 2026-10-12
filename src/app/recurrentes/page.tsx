@@ -8,6 +8,9 @@ export const metadata: Metadata = {
   title: 'Recurrentes | Finanzar'
 };
 
+// Reads live recurring rules; never serve a snapshot taken at build time.
+export const dynamic = 'force-dynamic';
+
 export default async function RecurrentesPage() {
   const allRules = await db
     .select({
