@@ -1,6 +1,8 @@
 import { headers } from 'next/headers';
 import { db } from '@/db';
 import { user } from '@/db/auth-schema';
+import { ledger_accounts } from '@/db/schema';
+import { eq } from 'drizzle-orm';
 import { auth, getSetupToken } from '@/lib/auth-provider';
 
 export async function getCurrentSession() {
@@ -20,6 +22,11 @@ export async function hasValidSession() {
 export async function requireAuth() {
 	const session = await getCurrentSession();
 	if (!session) throw new Error('Unauthorized');
+	const [ledgerOwner] = await db.select({ id: ledger_accounts.id })
+		.from(ledger_accounts)
+		.where(eq(ledger_accounts.owner_user_id, session.user.id))
+		.limit(1);
+	if (!ledgerOwner || ledgerOwner.id !== 'private') throw new Error('Forbidden');
 	return session;
 }
 

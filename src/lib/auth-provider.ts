@@ -16,5 +16,6 @@ export const auth = createFinanzarAuth(db, {
 	baseURL,
 	secret: authSecret,
 	secureCookies: isProduction,
+	enableMcp: process.env.MCP_OAUTH_ENABLED === 'true',
 	getSetupToken,
 });

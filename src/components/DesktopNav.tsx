@@ -16,8 +16,8 @@ const NAV_LEFT = [
 
 const NAV_RIGHT = [
   { href: "/personas", label: "Personas" },
-  { href: "/tarjetas", label: "Tarjetas" },
-  { href: "/medios-de-pago", label: "Medios" },
+  { href: "/medios-de-pago", label: "Medios de pago" },
+  { href: "/conexiones-ia", label: "Conexiones IA" },
 ];
 
 export function DesktopNav() {
@@ -25,7 +25,7 @@ export function DesktopNav() {
   if (pathname.startsWith('/login')) return null;
 
   const renderLink = (item: { href: string; label: string }) => {
-    const isActive = pathname === item.href;
+    const isActive = item.href === "/conexiones-ia" ? pathname.startsWith(item.href) : pathname === item.href;
     return (
       <Link
         key={item.href}

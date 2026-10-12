@@ -1,6 +1,9 @@
 import { betterAuth } from 'better-auth';
 import { drizzleAdapter } from '@better-auth/drizzle-adapter';
-import { username } from 'better-auth/plugins';
+import { jwt, username } from 'better-auth/plugins';
+import { mcp } from '@better-auth/mcp';
+import { cimd } from '@better-auth/cimd';
+import { fetchClientMetadataResource } from '@better-auth/cimd/node';
 import { APIError } from 'better-auth/api';
 import type { db } from '@/db';
 import { INITIAL_ACCOUNT_EMAIL, isValidUsername, secretsMatch } from './auth-policy';
@@ -9,8 +12,11 @@ type AuthConfiguration = {
 	baseURL: string;
 	secret: string;
 	secureCookies: boolean;
+	enableMcp: boolean;
 	getSetupToken: () => string | undefined;
 };
+
+const MCP_SCOPES = ['openid', 'offline_access', 'finanzar:read', 'finanzar:transactions:write'];
 
 export function createFinanzarAuth(database: typeof db, configuration: AuthConfiguration) {
 	return betterAuth({
@@ -27,7 +33,25 @@ export function createFinanzarAuth(database: typeof db, configuration: AuthConfi
 			minPasswordLength: 12,
 			maxPasswordLength: 128,
 		},
-		plugins: [username({ minUsernameLength: 3, maxUsernameLength: 32, usernameValidator: isValidUsername })],
+		plugins: [
+			username({ minUsernameLength: 3, maxUsernameLength: 32, usernameValidator: isValidUsername }),
+			...(configuration.enableMcp ? [
+				jwt(),
+				mcp({
+					loginPage: '/login',
+					consentPage: '/conexiones-ia/consentimiento',
+					resource: new URL('/api/mcp', configuration.baseURL).toString(),
+					scopes: MCP_SCOPES,
+					clientRegistrationDefaultScopes: MCP_SCOPES,
+					accessTokenExpiresIn: 60 * 60,
+					refreshTokenExpiresIn: 60 * 60 * 24 * 30,
+				}),
+				cimd({
+					fetchClientMetadataResource,
+					metadataProfile: 'mcp-2026-07-28',
+				}),
+			] : []),
+		],
 		session: { expiresIn: 60 * 60 * 24 * 7, updateAge: 60 * 60 * 12 },
 		rateLimit: {
 			enabled: true,
@@ -60,6 +84,7 @@ export function createFinanzarAuth(database: typeof db, configuration: AuthConfi
 			},
 		},
 		advanced: {
+			// Vercel overwrites this platform header. Do not trust generic client-supplied X-Forwarded-For.
 			ipAddress: { ipAddressHeaders: ['x-vercel-forwarded-for'] },
 			useSecureCookies: configuration.secureCookies,
 			defaultCookieAttributes: { httpOnly: true, sameSite: 'lax', secure: configuration.secureCookies },

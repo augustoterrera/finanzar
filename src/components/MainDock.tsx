@@ -9,8 +9,8 @@ import {
   Repeat, 
   Plus, 
   Users, 
-  CreditCard, 
-  Wallet 
+  Wallet,
+  Bot,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { SignOutButton } from "@/components/SignOutButton";
@@ -23,8 +23,8 @@ const NAV_LEFT = [
 
 const NAV_RIGHT = [
   { href: "/personas", icon: Users, label: "Personas" },
-  { href: "/tarjetas", icon: CreditCard, label: "Tarjetas" },
-  { href: "/medios-de-pago", icon: Wallet, label: "Medios" },
+  { href: "/medios-de-pago", icon: Wallet, label: "Medios de pago" },
+  { href: "/conexiones-ia", icon: Bot, label: "Conexiones con IA" },
 ];
 
 export function MainDock() {
@@ -32,7 +32,7 @@ export function MainDock() {
   if (pathname.startsWith('/login')) return null;
 
   const renderIconLink = (item: { href: string; icon: typeof Home; label: string }) => {
-    const isActive = pathname === item.href;
+    const isActive = item.href === "/conexiones-ia" ? pathname.startsWith(item.href) : pathname === item.href;
     const Icon = item.icon;
 
     return (
@@ -81,7 +81,7 @@ export function MainDock() {
         <Plus className="w-5 h-5" />
       </Link>
 
-      {/* Right items: Personas, Tarjetas, Medios */}
+      {/* Right items: Personas, Medios de pago, Conexiones con IA */}
       {NAV_RIGHT.map(renderIconLink)}
       <SignOutButton compact />
     </nav>

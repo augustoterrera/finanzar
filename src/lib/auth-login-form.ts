@@ -3,11 +3,15 @@ import type { createFinanzarAuth } from './auth-config';
 import { copyAuthCookies } from './auth-cookies';
 import { isValidUsername } from './auth-policy';
 import type { LoginError } from './login-messages';
+import { oauthConsentPath, verifyOAuthConsentQuery } from './oauth-consent-query';
 
 export async function submitLoginForm(auth: ReturnType<typeof createFinanzarAuth>, request: Request) {
 	const baseURL = new URL(auth.options.baseURL as string);
-	const redirect = (error?: LoginError) => {
-		const response = NextResponse.redirect(new URL(error ? `/login?error=${error}` : '/', baseURL), 303);
+	const redirect = (error?: LoginError, oauthQuery?: string) => {
+		const destination = error
+			? `/login?${new URLSearchParams({ error, ...(oauthQuery ? { oauth_query: oauthQuery } : {}) })}`
+			: oauthQuery ? oauthConsentPath(oauthQuery) : '/';
+		const response = NextResponse.redirect(new URL(destination, baseURL), 303);
 		response.headers.set('Cache-Control', 'no-store');
 		response.headers.set('Referrer-Policy', 'no-referrer');
 		return response;
@@ -20,8 +24,15 @@ export async function submitLoginForm(auth: ReturnType<typeof createFinanzarAuth
 		const formData = await request.formData();
 		const username = formData.get('username');
 		const password = formData.get('password');
+		const submittedOAuthQuery = formData.get('oauth_query');
+		let oauthQuery: string | undefined;
+		if (typeof submittedOAuthQuery === 'string' && submittedOAuthQuery) {
+			const { secret } = await auth.$context;
+			const verified = await verifyOAuthConsentQuery(submittedOAuthQuery, secret);
+			if (verified) oauthQuery = verified.toString();
+		}
 		if (typeof username !== 'string' || !isValidUsername(username.trim()) || typeof password !== 'string' || password.length > 128) {
-			return redirect('credenciales');
+			return redirect('credenciales', oauthQuery);
 		}
 		const headers = new Headers(request.headers);
 		headers.set('content-type', 'application/json');
@@ -31,8 +42,8 @@ export async function submitLoginForm(auth: ReturnType<typeof createFinanzarAuth
 		const result = await auth.handler(new Request(new URL('/api/auth/sign-in/username', baseURL), {
 			method: 'POST', headers, body: JSON.stringify({ username: username.trim(), password }),
 		}));
-		if (!result.ok) return redirect(result.status === 429 ? 'limite' : result.status >= 500 ? 'conexion' : 'credenciales');
-		return copyAuthCookies(result.headers, redirect());
+		if (!result.ok) return redirect(result.status === 429 ? 'limite' : result.status >= 500 ? 'conexion' : 'credenciales', oauthQuery);
+		return copyAuthCookies(result.headers, redirect(undefined, oauthQuery));
 	} catch {
 		return redirect('conexion');
 	}

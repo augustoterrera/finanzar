@@ -1,0 +1,19 @@
+services:
+  db:
+    image: ghcr.io/tursodatabase/libsql-server:latest-arm
+    entrypoint: ["/bin/sqld"]
+    command:
+      - --db-path
+      - /var/lib/sqld/iku.db
+      - --http-listen-addr
+      - 0.0.0.0:8080
+      - --grpc-listen-addr
+      - 0.0.0.0:5001
+    ports:
+      - "127.0.0.1:8080:8080"
+    volumes:
+      - finanzar_libsql_data:/var/lib/sqld
+    restart: unless-stopped
+
+volumes:
+  finanzar_libsql_data:

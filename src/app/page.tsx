@@ -1,12 +1,12 @@
 import Link from 'next/link';
 import { ArrowDownLeft, ArrowUpRight, Wallet } from 'lucide-react';
-import { and, eq } from 'drizzle-orm';
-import { db } from '@/db';
-import { cards, people, transaction_splits, transactions } from '@/db/schema';
 import MonthSelector from '@/components/MonthSelector';
 import ExpenseLedgerCard from '@/components/ExpenseLedgerCard';
-import { buildExpenseLedgers, type ExpenseLedger } from '@/lib/expense-ledgers';
+import type { ExpenseLedger } from '@/lib/expense-ledgers';
+import { getMonthlyExpenseLedgerSnapshot } from '@/lib/expense-ledger-service';
 import { formatCents } from '@/lib/format';
+import { db } from '@/db';
+import { requireAuth } from '@/lib/auth';
 
 function isValidMonth(value: string): boolean {
   if (!/^\d{4}-\d{2}$/.test(value)) return false;
@@ -23,17 +23,9 @@ export default async function DashboardPage({
   const currentMonth = new Date().toISOString().slice(0, 7);
   const month = params.month && isValidMonth(params.month) ? params.month : currentMonth;
 
-  const [allPeople, allCards, txRows] = await Promise.all([
-    db.select().from(people),
-    db.select().from(cards),
-    db
-      .select({ tx: transactions, split: transaction_splits })
-      .from(transactions)
-      .leftJoin(transaction_splits, eq(transactions.id, transaction_splits.transaction_id))
-      .where(and(eq(transactions.month, month), eq(transactions.status, 'active'))),
-  ]);
-
-  const owner = allPeople.find((person) => person.is_owner);
+  const session = await requireAuth();
+  const snapshot = await getMonthlyExpenseLedgerSnapshot(db, session.user.id, month);
+  const { owner, income, ownerExpenses, ledgers } = snapshot;
 
   if (!owner) {
     return (
@@ -45,21 +37,6 @@ export default async function DashboardPage({
     );
   }
 
-  const transactionsById = new Map<string, typeof transactions.$inferSelect>();
-  const splits: typeof transaction_splits.$inferSelect[] = [];
-
-  for (const row of txRows) {
-    transactionsById.set(row.tx.id, row.tx);
-    if (row.split) splits.push(row.split);
-  }
-
-  const monthTransactions = Array.from(transactionsById.values());
-  const income = monthTransactions.reduce((total, transaction) =>
-    total + (transaction.type === 'income' ? transaction.amount : 0), 0);
-  const expenseIds = new Set(monthTransactions.filter((transaction) => transaction.type === 'expense').map((transaction) => transaction.id));
-  const ownerExpenses = splits.reduce((total, split) =>
-    total + (split.person_id === owner.id && expenseIds.has(split.transaction_id) ? split.amount : 0), 0);
-  const ledgers = buildExpenseLedgers(monthTransactions, splits, allPeople, allCards);
   const accountsByPerson = new Map<string, { name: string; isOwner: boolean; total: number; ledgers: ExpenseLedger[] }>();
   for (const ledger of ledgers) {
     const personKey = ledger.personId ?? 'unassigned';

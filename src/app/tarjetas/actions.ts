@@ -39,14 +39,26 @@ export async function createCardAction(prevState: any, formData: FormData) {
   }
 
   try {
-    await db.insert(cards).values({ 
-      name, 
-      owner_person_id, 
-      color,
-      closing_day, 
-      due_day 
+    await db.transaction(async (tx) => {
+      const cardId = crypto.randomUUID();
+      await tx.insert(cards).values({
+        id: cardId,
+        name,
+        owner_person_id,
+        color,
+        closing_day,
+        due_day
+      });
+      await tx.insert(payment_methods).values({
+        name,
+        type: 'credit_card',
+        card_id: cardId,
+        color
+      });
     });
     revalidatePath('/tarjetas');
+    revalidatePath('/medios-de-pago');
+    revalidatePath('/movimientos/nuevo');
     return { success: true };
   } catch (e) {
     return { error: 'Error al crear tarjeta' };
@@ -75,11 +87,19 @@ export async function updateCardAction(prevState: any, formData: FormData) {
   if (!person) return { error: 'El dueño seleccionado no existe' };
 
   try {
-    await db
-      .update(cards)
-      .set({ name, owner_person_id, color, closing_day, due_day })
-      .where(eq(cards.id, id));
+    await db.transaction(async (tx) => {
+      await tx
+        .update(cards)
+        .set({ name, owner_person_id, color, closing_day, due_day })
+        .where(eq(cards.id, id));
+      await tx
+        .update(payment_methods)
+        .set({ name, color })
+        .where(eq(payment_methods.card_id, id));
+    });
     revalidatePath('/tarjetas');
+    revalidatePath('/medios-de-pago');
+    revalidatePath('/movimientos/nuevo');
     return { success: true };
   } catch {
     return { error: 'Error al actualizar tarjeta' };
@@ -106,6 +126,7 @@ export async function deleteCardAction(prevState: any, formData: FormData) {
   try {
     await db.delete(cards).where(eq(cards.id, id));
     revalidatePath('/tarjetas');
+    revalidatePath('/medios-de-pago');
     return { success: true };
   } catch (e) {
     return { error: 'Error inesperado al borrar' };

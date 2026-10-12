@@ -6,7 +6,7 @@ import { authClient } from '@/lib/auth-client';
 import { USERNAME_PATTERN } from '@/lib/auth-policy';
 import { LOGIN_ERRORS, type LoginError } from '@/lib/login-messages';
 
-export function LoginForm({ initialError }: { initialError?: LoginError }) {
+export function LoginForm({ initialError, oauthQuery = '' }: { initialError?: LoginError; oauthQuery?: string }) {
 	const router = useRouter();
 	const [busy, setBusy] = useState(false);
 	const [error, setError] = useState(initialError ? LOGIN_ERRORS[initialError] : '');
@@ -21,13 +21,14 @@ export function LoginForm({ initialError }: { initialError?: LoginError }) {
 			const result = await authClient.signIn.username({
 				username: String(formData.get('username') ?? '').trim(),
 				password: String(formData.get('password') ?? ''),
+				callbackURL: oauthQuery ? `/conexiones-ia/consentimiento?${oauthQuery}` : '/',
 			});
 			if (result.error) {
 				setError(result.error.status === 429 ? LOGIN_ERRORS.limite
 					: result.error.status >= 500 ? LOGIN_ERRORS.conexion : LOGIN_ERRORS.credenciales);
 				return;
 			}
-			router.replace('/');
+			router.replace(oauthQuery ? `/conexiones-ia/consentimiento?${oauthQuery}` : '/');
 			router.refresh();
 		} catch {
 			setError('No se pudo conectar. Revisá tu conexión e intentá de nuevo.');
@@ -38,6 +39,7 @@ export function LoginForm({ initialError }: { initialError?: LoginError }) {
 
 	return (
 		<form method="post" action="/api/auth/login" onSubmit={submit} className="space-y-4">
+			{oauthQuery && <input type="hidden" name="oauth_query" value={oauthQuery} />}
 			<div className="space-y-1.5">
 				<label htmlFor="username" className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">Usuario</label>
 				<input

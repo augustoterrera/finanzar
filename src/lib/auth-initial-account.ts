@@ -2,6 +2,7 @@ import { eq } from 'drizzle-orm';
 import { APIError } from 'better-auth/api';
 import type { db } from '@/db';
 import { user } from '@/db/auth-schema';
+import { ledger_accounts } from '@/db/schema';
 import type { createFinanzarAuth } from './auth-config';
 import { INITIAL_ACCOUNT_EMAIL } from './auth-policy';
 
@@ -21,5 +22,6 @@ export async function createInitialAccount(
 	// for duplicate/denied signup. Never report that as a newly created account.
 	const [created] = await database.select({ id: user.id }).from(user).where(eq(user.id, result.user.id)).limit(1);
 	if (!created) throw new APIError('CONFLICT', { message: 'El acceso inicial ya fue configurado o el alta fue rechazada.' });
+	await database.insert(ledger_accounts).values({ owner_user_id: created.id });
 	return created;
 }
